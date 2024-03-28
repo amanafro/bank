@@ -2,52 +2,53 @@ package main
 
 import (
 	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
-	"log"
+	_ "github.com/mattn/go-sqlite3"
 )
 
-var db *sql.DB
-
-func main() {
-	InitDB()
-
-	getInfo1()
+func checkErr(err error) {
+	if err != nil {
+		panic(err)
+	}
 }
 
-type Account struct {
-	ID      int     `json:"id"`
-	Balance float32 `json:"balance"`
+var DB *sql.DB
+
+func ConnectDatabase() error {
+	db, err := sql.Open("sqlite3", "./personal.db")
+	checkErr(err)
+
+	query, err := DB.Query("CREATE TABLE IF NOT EXISTS customers ( customer_id INTEGER PRIMARY KEY, name TEXT,password TEXT );")
+	checkErr(err)
+
+	DB = db
+	return nil
 }
 
 type Customer struct {
-	ID      int     `json:"c_id"`
-	Name    string  `json:"name"`
-	Account Account `json:"account"`
+	ID       int
+	Name     string
+	Password string
 }
 
-func errCheck(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
+type Account struct {
+	ID         int
+	Balance    float64
+	CustomerID int
 }
 
-func InitDB() {
-	db, err := sql.Open("mysql", "root:root@tcp(127.0.0.1:3306)/personal")
-	defer db.Close()
+func main() {
+	ConnectDatabase()
+	getAllInfo()
 
-	errCheck(err)
 }
 
-func getInfo1() {
-	rows, err := db.Query("SELECT * FROM account, customer where ")
-	errCheck(err)
+func getAllInfo() Customer {
+	rows, err := DB.Query("SELECT accounts.account_id, accounts.balance, customers.name FROM accounts JOIN customers ON accounts.customer_id = customers.customer_id;")
+	checkErr(err)
 	defer rows.Close()
-
-	var info Account
+	customer := Customer{}
 	for rows.Next() {
-		var account Account
-		err = rows.Scan(&account.ID, &account.Balance)
-		errCheck(err)
-		log.Printf(info.ID)
+		rows.Scan(&customer.ID, &customer.Name, &customer.Password)
 	}
+	return customer
 }
