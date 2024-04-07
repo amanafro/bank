@@ -2,27 +2,10 @@ package main
 
 import (
 	"database/sql"
-	_ "github.com/mattn/go-sqlite3"
+	"fmt"
+
+	_ "github.com/go-sql-driver/mysql"
 )
-
-func checkErr(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
-var DB *sql.DB
-
-func ConnectDatabase() error {
-	db, err := sql.Open("sqlite3", "./personal.db")
-	checkErr(err)
-
-	query, err := DB.Query("CREATE TABLE IF NOT EXISTS customers ( customer_id INTEGER PRIMARY KEY, name TEXT,password TEXT );")
-	checkErr(err)
-
-	DB = db
-	return nil
-}
 
 type Customer struct {
 	ID       int
@@ -36,19 +19,33 @@ type Account struct {
 	CustomerID int
 }
 
-func main() {
-	ConnectDatabase()
-	getAllInfo()
-
+func checkErr(err error) {
+	if err != nil {
+		panic(err)
+	}
 }
 
-func getAllInfo() Customer {
-	rows, err := DB.Query("SELECT accounts.account_id, accounts.balance, customers.name FROM accounts JOIN customers ON accounts.customer_id = customers.customer_id;")
+func main() {
+	db, err := sql.Open("mysql", "root:root@tcp(127.0.0.1:3306)/gobank")
 	checkErr(err)
-	defer rows.Close()
-	customer := Customer{}
-	for rows.Next() {
-		rows.Scan(&customer.ID, &customer.Name, &customer.Password)
+
+	defer db.Close()
+
+	result, err := db.Query("SELECT a.account_id, a.account_number, a.balance, c.name AS customer_name FROM   accounts a  JOIN customers c ON a.customer_id = c.customer_id;")
+	checkErr(err)
+
+	for result.Next() {
+		var cusomer Customer
+		var account Account
+
+		err = result.Scan(&cusomer.Name, &account.CustomerID, &account.Balance)
+		checkErr(err)
+		fmt.Printf("Customer: %s, CustomerID: %d, Balance: %f", cusomer.Name, account.CustomerID, account.Balance)
 	}
-	return customer
+}
+
+func intro() {
+	fmt.Println("Hello! How can help you")
+	fmt.Printf("1. H")
+
 }
