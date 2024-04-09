@@ -27,21 +27,21 @@ func main() {
 
 	defer db.Close()
 
-	result, err := db.Query("SELECT a.account_id, a.account_number, a.balance, c.name AS customer_name FROM   accounts a  JOIN customers c ON a.customer_id = c.customer_id;")
+	result, err := db.Query("SELECT a.account_id, c.name, a.balance FROM  accounts a  JOIN customers c ON a.customer_id = c.customer_id;")
 	if err != nil {
 		panic(err)
 	}
 
 	for result.Next() {
 		var account Account
-		var cusomer Customer
+		var customer Customer
 
-		err = result.Scan(&cusomer.ID, &cusomer.Name, &account.CustomerID, &account.Balance)
+		err = result.Scan(&account.ID, &customer.Name, &account.Balance)
 		if err != nil {
 			panic(err)
 		}
 
-		fmt.Printf("Customer: %s, CustomerID: %d, Balance: %f", cusomer.Name, account.CustomerID, account.Balance)
+		fmt.Printf("Customer: %s, AccountID: %d, Balance: %d \n", customer.Name, account.ID, account.Balance)
 	}
 }
 
