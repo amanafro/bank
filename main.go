@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -19,34 +20,53 @@ type Customer struct {
 	Password string
 }
 
-func main() {
+func InitDB() *sql.DB {
 	db, err := sql.Open("mysql", "root:root@tcp(127.0.0.1:3306)/gobank")
 	if err != nil {
 		panic(err)
 	}
-
 	defer db.Close()
 
-	result, err := db.Query("SELECT a.account_id, c.name, a.balance FROM  accounts a  JOIN customers c ON a.customer_id = c.customer_id;")
-	if err != nil {
-		panic(err)
-	}
+	return db
+}
 
-	for result.Next() {
-		var account Account
-		var customer Customer
-
-		err = result.Scan(&account.ID, &customer.Name, &account.Balance)
-		if err != nil {
-			panic(err)
-		}
-
-		fmt.Printf("Customer: %s, AccountID: %d, Balance: %d \n", customer.Name, account.ID, account.Balance)
-	}
+func main() {
+	intro()
 }
 
 func intro() {
-	fmt.Println("Hello! How can help you")
-	fmt.Printf("1. H")
+	var choice string
+
+	fmt.Println("Hello! How can help you? \n 1. Deposit \n 2. Withdraw \n 3. Balance")
+	fmt.Scanln(&choice)
+
+	switch choice {
+	case "1":
+
+	}
+
+}
+
+func Deposit() {
+	db := InitDB()
+
+	var depositeMoney int
+
+	fmt.Println("Great! How much you wanna deposit?")
+	fmt.Scanln(&depositeMoney)
+
+	if depositeMoney < 5 {
+		fmt.Println("You have to atleast deposit CHF 5")
+	}
+
+	res, err := db.Query("UPDATE accounts SET balance+ WHERE account_id='1' ")
+  if err != nil {
+    log.Fatal(err)
+  }
+
+  res.Next() {
+    for 
+  }
+
 
 }
