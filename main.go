@@ -10,6 +10,7 @@ import (
 
 type Account struct {
 	ID         int
+	Number     string
 	Balance    int
 	CustomerID int
 }
@@ -25,7 +26,6 @@ func InitDB() *sql.DB {
 	if err != nil {
 		panic(err)
 	}
-	defer db.Close()
 
 	return db
 }
@@ -42,9 +42,14 @@ func intro() {
 
 	switch choice {
 	case "1":
-
+		Deposit()
+	case "2":
+		Withdraw()
+	case "3":
+		CheckBalance()
+	default:
+		fmt.Println("Invalid choice")
 	}
-
 }
 
 func Deposit() {
@@ -59,14 +64,55 @@ func Deposit() {
 		fmt.Println("You have to atleast deposit CHF 5")
 	}
 
-	res, err := db.Query("UPDATE accounts SET balance+ WHERE account_id='1' ")
-  if err != nil {
-    log.Fatal(err)
-  }
+	res, err := db.Query("UPDATE accounts SET balance+ depositeMoney WHERE account_id=1 ")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-  res.Next() {
-    for 
-  }
+	fmt.Println(res)
+	db.Close()
+}
 
+func Withdraw() {
+	db := InitDB()
 
+	var withdrawMoney int
+	fmt.Println("How much money would like to Withdraw? ")
+	fmt.Scanln(&withdrawMoney)
+
+	if withdrawMoney < 10 {
+		fmt.Println("You can't withdraw less than CHF 10")
+	}
+
+	update, err := db.Query("UPDATE accounts SET balance - withdraw WHERE account_id=1")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(update)
+	db.Close()
+}
+
+func CheckBalance() {
+	db := InitDB()
+
+	update, err := db.Query("SELECT account_id, account_number, balance FROM accounts WHERE customer_id=1 ")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for update.Next() {
+
+		var accountBalance Account
+
+		err = update.Scan(&accountBalance.ID, &accountBalance.Number, &accountBalance.Balance)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("Account ID: %d, Account Num: %s, Account Balance: %d",
+			accountBalance.ID, accountBalance.Number, accountBalance.Balance)
+	}
+
+	fmt.Println(update)
+	db.Close()
 }
