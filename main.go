@@ -31,7 +31,9 @@ func InitDB() *sql.DB {
 }
 
 func main() {
-	intro()
+	for {
+		intro()
+	}
 }
 
 func intro() {
@@ -58,13 +60,15 @@ func Deposit() {
 	var depositeMoney int
 
 	fmt.Println("Great! How much you wanna deposit?")
-	fmt.Scanln(&depositeMoney)
+	if _, err := fmt.Scanln(&depositeMoney); err != nil {
+		log.Fatal("Error while depositing", err)
+	}
 
 	if depositeMoney < 5 {
 		fmt.Println("You have to atleast deposit CHF 5")
 	}
 
-	res, err := db.Query("UPDATE accounts SET balance+ depositeMoney WHERE account_id=1 ")
+	res, err := db.Exec("UPDATE accounts SET balance = balance + ? WHERE account_id=1 ", depositeMoney)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -78,15 +82,19 @@ func Withdraw() {
 
 	var withdrawMoney int
 	fmt.Println("How much money would like to Withdraw? ")
-	fmt.Scanln(&withdrawMoney)
+	if _, err := fmt.Scanln(&withdrawMoney); err != nil {
+		log.Fatal("Error while withdrawing the money")
+	}
 
 	if withdrawMoney < 10 {
 		fmt.Println("You can't withdraw less than CHF 10")
 	}
 
-	update, err := db.Query("UPDATE accounts SET balance - withdraw WHERE account_id=1")
+	update, err := db.Exec("UPDATE accounts SET balance = balance - ? WHERE account_id=1", withdrawMoney)
 	if err != nil {
 		log.Fatal(err)
+	} else {
+
 	}
 
 	fmt.Println(update)
@@ -109,7 +117,7 @@ func CheckBalance() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf("Account ID: %d, Account Num: %s, Account Balance: %d",
+		fmt.Printf("Account ID: %d,\n Account Num: %s,\n Account Balance: %d\n",
 			accountBalance.ID, accountBalance.Number, accountBalance.Balance)
 	}
 
