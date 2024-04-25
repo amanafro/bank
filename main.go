@@ -8,6 +8,14 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+func InitDB() *sql.DB {
+	db, err := sql.Open("mysql", "root:root@tcp(127.0.0.1:3306)/gobank")
+	if err != nil {
+		panic(err)
+	}
+	return db
+}
+
 type Account struct {
 	ID         int
 	Number     string
@@ -21,19 +29,14 @@ type Customer struct {
 	Password string
 }
 
-func InitDB() *sql.DB {
-	db, err := sql.Open("mysql", "root:root@tcp(127.0.0.1:3306)/gobank")
+func CheckError(err error) {
 	if err != nil {
-		panic(err)
+		log.Fatal("Error: ", err)
 	}
-
-	return db
 }
 
 func main() {
-	for {
-		intro()
-	}
+	intro()
 }
 
 func intro() {
@@ -54,6 +57,9 @@ func intro() {
 	}
 }
 
+const depositLimit int = 5
+const withdrawLimit int = 10
+
 func Deposit() {
 	db := InitDB()
 
@@ -64,40 +70,62 @@ func Deposit() {
 		log.Fatal("Error while depositing", err)
 	}
 
-	if depositeMoney < 5 {
+	if depositeMoney > depositLimit {
+		res, err := db.Exec("UPDATE accounts SET balance = balance + ? WHERE account_id=1 ", depositeMoney)
+		CheckError(err)
+
+		balance, err := db.Query("SELECT balance FROM accounts WHERE account_id=1")
+		CheckError(err)
+
+		for balance.Next() {
+			var accountBalance Account
+			err = balance.Scan(&accountBalance.Balance)
+			CheckError(err)
+			fmt.Println("Your deposit was succesful")
+			fmt.Printf("Current account balance: %d\n", accountBalance.Balance)
+		}
+		fmt.Println(&res)
+	} else {
 		fmt.Println("You have to atleast deposit CHF 5")
 	}
-
-	res, err := db.Exec("UPDATE accounts SET balance = balance + ? WHERE account_id=1 ", depositeMoney)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println(res)
 	db.Close()
 }
 
 func Withdraw() {
 	db := InitDB()
 
+	var balance int
 	var withdrawMoney int
+
+	err := db.QueryRow("SELECT balance FROM accounts WHERE account_id=1").Scan(&balance)
+	CheckError(err)
+
 	fmt.Println("How much money would like to Withdraw? ")
 	if _, err := fmt.Scanln(&withdrawMoney); err != nil {
 		log.Fatal("Error while withdrawing the money")
 	}
 
-	if withdrawMoney < 10 {
+	if withdrawMoney > withdrawLimit {
+		update, err := db.Exec("UPDATE accounts SET balance = balance - ? WHERE account_id=1", withdrawMoney)
+		CheckError(err)
+
+		balance, err := db.Query("SELECT balance FROM accounts WHERE account_id=1")
+		CheckError(err)
+
+		for balance.Next() {
+			var accountBalance Account
+			err = balance.Scan(&accountBalance.Balance)
+			CheckError(err)
+
+			fmt.Printf("Current account balance: %d\n", accountBalance.Balance)
+		}
+		fmt.Println(&update)
+	}
+	if withdrawMoney > balance {
+		fmt.Println("Insufficient funds!")
+	} else {
 		fmt.Println("You can't withdraw less than CHF 10")
 	}
-
-	update, err := db.Exec("UPDATE accounts SET balance = balance - ? WHERE account_id=1", withdrawMoney)
-	if err != nil {
-		log.Fatal(err)
-	} else {
-
-	}
-
-	fmt.Println(update)
 	db.Close()
 }
 
@@ -105,22 +133,15 @@ func CheckBalance() {
 	db := InitDB()
 
 	update, err := db.Query("SELECT account_id, account_number, balance FROM accounts WHERE customer_id=1 ")
-	if err != nil {
-		log.Fatal(err)
-	}
+	CheckError(err)
 
 	for update.Next() {
-
 		var accountBalance Account
-
 		err = update.Scan(&accountBalance.ID, &accountBalance.Number, &accountBalance.Balance)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Printf("Account ID: %d,\n Account Num: %s,\n Account Balance: %d\n",
+		CheckError(err)
+
+		fmt.Printf(" Account ID: %d,\n Account Num: %s,\n Account Balance: %d\n",
 			accountBalance.ID, accountBalance.Number, accountBalance.Balance)
 	}
-
-	fmt.Println(update)
 	db.Close()
 }
