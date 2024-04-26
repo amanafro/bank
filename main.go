@@ -1,20 +1,12 @@
 package main
 
 import (
-	"database/sql"
+	"expenseTrackerCLI/db"
 	"fmt"
 	"log"
 
 	_ "github.com/go-sql-driver/mysql"
 )
-
-func InitDB() *sql.DB {
-	db, err := sql.Open("mysql", "root:root@tcp(127.0.0.1:3306)/gobank")
-	if err != nil {
-		panic(err)
-	}
-	return db
-}
 
 type Account struct {
 	ID         int
@@ -58,10 +50,9 @@ func intro() {
 }
 
 const depositLimit int = 5
-const withdrawLimit int = 10
 
 func Deposit() {
-	db := InitDB()
+	db := db.InitDB()
 
 	var depositeMoney int
 
@@ -71,7 +62,7 @@ func Deposit() {
 	}
 
 	if depositeMoney > depositLimit {
-		res, err := db.Exec("UPDATE accounts SET balance = balance + ? WHERE account_id=1 ", depositeMoney)
+		_, err := db.Exec("UPDATE accounts SET balance = balance + ? WHERE account_id=1 ", depositeMoney)
 		CheckError(err)
 
 		balance, err := db.Query("SELECT balance FROM accounts WHERE account_id=1")
@@ -84,15 +75,16 @@ func Deposit() {
 			fmt.Println("Your deposit was succesful")
 			fmt.Printf("Current account balance: %d\n", accountBalance.Balance)
 		}
-		fmt.Println(&res)
 	} else {
 		fmt.Println("You have to atleast deposit CHF 5")
 	}
 	db.Close()
 }
 
+const withdrawLimit int = 10
+
 func Withdraw() {
-	db := InitDB()
+	db := db.InitDB()
 
 	var balance int
 	var withdrawMoney int
@@ -105,7 +97,7 @@ func Withdraw() {
 		log.Fatal("Error while withdrawing the money")
 	}
 
-	if withdrawMoney > withdrawLimit {
+	if withdrawMoney < withdrawLimit {
 		update, err := db.Exec("UPDATE accounts SET balance = balance - ? WHERE account_id=1", withdrawMoney)
 		CheckError(err)
 
@@ -130,7 +122,7 @@ func Withdraw() {
 }
 
 func CheckBalance() {
-	db := InitDB()
+	db := db.InitDB()
 
 	update, err := db.Query("SELECT account_id, account_number, balance FROM accounts WHERE customer_id=1 ")
 	CheckError(err)
