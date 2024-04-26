@@ -1,7 +1,7 @@
 package main
 
 import (
-	"expenseTrackerCLI/db"
+	"bank/db"
 	"fmt"
 	"log"
 
