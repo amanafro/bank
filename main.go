@@ -7,7 +7,8 @@ import (
 )
 
 func main() {
-	auth.Auth()
+	auth.Register()
+
 }
 
 func intro() {
