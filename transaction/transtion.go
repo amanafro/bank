@@ -10,9 +10,8 @@ import (
 
 type Account struct {
 	ID         int
-	Number     string
-	Balance    int
 	CustomerID int
+	Balance    float32
 }
 
 type Customer struct {
@@ -27,12 +26,12 @@ func CheckError(err error) {
 	}
 }
 
-const depositLimit int = 5
+const depositLimit float32 = 5.0
 
 func Deposit() {
 	db := db.InitDB()
 
-	var depositeMoney int
+	var depositeMoney float32
 
 	fmt.Println("Great! How much you wanna deposit?")
 	if _, err := fmt.Scanln(&depositeMoney); err != nil {
@@ -40,10 +39,10 @@ func Deposit() {
 	}
 
 	if depositeMoney > depositLimit {
-		_, err := db.Exec("UPDATE accounts SET balance = balance + ? WHERE account_id=1 ", depositeMoney)
+		_, err := db.Exec("UPDATE account SET amount = amount + ? WHERE account.id=1 ", depositeMoney)
 		CheckError(err)
 
-		balance, err := db.Query("SELECT balance FROM accounts WHERE account_id=1")
+		balance, err := db.Query("SELECT amount FROM account WHERE account.id=1")
 		CheckError(err)
 
 		for balance.Next() {
@@ -51,7 +50,7 @@ func Deposit() {
 			err = balance.Scan(&accountBalance.Balance)
 			CheckError(err)
 			fmt.Println("Your deposit was succesful")
-			fmt.Printf("Current account balance: %d\n", accountBalance.Balance)
+			fmt.Printf("Current account balance: %f\n", accountBalance.Balance)
 		}
 	} else {
 		fmt.Println("You have to atleast deposit CHF 5")
@@ -59,15 +58,15 @@ func Deposit() {
 	db.Close()
 }
 
-const withdrawLimit int = 10
+const withdrawLimit float32 = 10.0
 
 func Withdraw() {
 	db := db.InitDB()
 
-	var balance int
-	var withdrawMoney int
+	var balance float32
+	var withdrawMoney float32
 
-	err := db.QueryRow("SELECT balance FROM accounts WHERE account_id=1").Scan(&balance)
+	err := db.QueryRow("SELECT amount FROM account WHERE account.id=1").Scan(&balance)
 	CheckError(err)
 
 	fmt.Println("How much money would like to Withdraw? ")
@@ -75,11 +74,11 @@ func Withdraw() {
 		log.Fatal("Error while withdrawing the money")
 	}
 
-	if withdrawMoney < withdrawLimit {
-		update, err := db.Exec("UPDATE accounts SET balance = balance - ? WHERE account_id=1", withdrawMoney)
+	if withdrawMoney > withdrawLimit {
+		_, err := db.Exec("UPDATE account SET amount = amount - ? WHERE account.id=1", withdrawMoney)
 		CheckError(err)
 
-		balance, err := db.Query("SELECT balance FROM accounts WHERE account_id=1")
+		balance, err := db.Query("SELECT amount FROM account WHERE account.id=1")
 		CheckError(err)
 
 		for balance.Next() {
@@ -87,14 +86,15 @@ func Withdraw() {
 			err = balance.Scan(&accountBalance.Balance)
 			CheckError(err)
 
-			fmt.Printf("Current account balance: %d\n", accountBalance.Balance)
+			fmt.Printf("Current account balance: %f\n", accountBalance.Balance)
 		}
-		fmt.Println(&update)
 	}
+	if withdrawMoney < withdrawLimit {
+		fmt.Println("You can't withdraw less than CHF 10.-")
+	}
+
 	if withdrawMoney > balance {
 		fmt.Println("Insufficient funds!")
-	} else {
-		fmt.Println("You can't withdraw less than CHF 10")
 	}
 	db.Close()
 }
@@ -102,16 +102,16 @@ func Withdraw() {
 func CheckBalance() {
 	db := db.InitDB()
 
-	update, err := db.Query("SELECT account_id, account_number, balance FROM accounts WHERE customer_id=1 ")
+	update, err := db.Query("SELECT id, amount FROM account WHERE id=1 ")
 	CheckError(err)
 
 	for update.Next() {
 		var accountBalance Account
-		err = update.Scan(&accountBalance.ID, &accountBalance.Number, &accountBalance.Balance)
+		err = update.Scan(&accountBalance.ID, &accountBalance.Balance)
 		CheckError(err)
 
-		fmt.Printf(" Account ID: %d,\n Account Num: %s,\n Account Balance: %d\n",
-			accountBalance.ID, accountBalance.Number, accountBalance.Balance)
+		fmt.Printf("Account ID: %d\nAccount Balance: %f\n",
+			accountBalance.ID, accountBalance.Balance)
 	}
 	db.Close()
 }
