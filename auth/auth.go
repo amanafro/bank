@@ -20,7 +20,7 @@ func LogIn() (bool, error) {
 	fmt.Println("Passowrd")
 	fmt.Scanln(&password)
 
-	err := db.QueryRow("SELECT customer_id, password FROM customers WHERE customer_id = ? AND password = ?", userID).Scan(&hash)
+	err := db.QueryRow("SELECT id, password FROM customer WHERE id = ? AND password = ?", userID).Scan(&hash)
 
 	if err != nil {
 		return false, err
@@ -42,11 +42,11 @@ func Register() {
 	var customer_password_conform string
 
 	fmt.Printf("Register \n")
-	fmt.Println("Full name")
+	fmt.Printf("Full name \n")
 	fmt.Scanln(&customer_name)
-	fmt.Println("Passowrd")
+	fmt.Printf("Passowrd \n")
 	fmt.Scanln(&customer_password)
-	fmt.Println("Conform passowrd")
+	fmt.Printf("Conform passowrd \n")
 	fmt.Scanln(&customer_password_conform)
 
 	if customer_password == customer_password_conform {
@@ -55,9 +55,7 @@ func Register() {
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		_, err = db.Exec("INSERT INTO customers (name, password) VALUES (?,?)", customer_name, hash)
-
+		_, err = db.Exec("INSERT INTO customer (name, password) VALUES (?,?)", customer_name, hash)
 		log.Fatal(err)
 
 	} else {

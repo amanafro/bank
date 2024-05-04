@@ -5,10 +5,6 @@ import (
 	"fmt"
 )
 
-func main() {
-  intro()
-}
-
 func intro() {
 	var choice string
 
