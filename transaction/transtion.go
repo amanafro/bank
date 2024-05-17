@@ -1,9 +1,10 @@
 package transaction
 
 import (
-	"bank/db"
 	"fmt"
 	"log"
+
+	"bank/db"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -24,11 +25,10 @@ func CheckError(err error) {
 
 const depositLimit float32 = 5.0
 
-func Deposit() (float32, error) {
+func Deposit() {
 	db, err := db.GetDB()
 	if err != nil {
 		fmt.Println("Error getting DB connection:", err)
-		return 0, err
 	}
 	defer db.Close()
 
@@ -40,22 +40,22 @@ func Deposit() (float32, error) {
 	}
 
 	var balance float32
-	err = db.QueryRow("SELECT balance FROM accounts WHERE id=1").Scan(&balance)
+	err = db.QueryRow("SELECT balance FROM account WHERE id=1").Scan(&balance)
 	if err != nil {
-		return 0, fmt.Errorf("error fetching balance: %v", err)
+		log.Fatal(err)
 	}
 
 	if depositeMoney < depositLimit {
 		fmt.Println("You need to atleast deposit CHF 5.-")
-		return 0, err
+		return
 	}
 
-	_, err = db.Exec("UPDATE account SET balance = balance - ? WHERE account.id = 1", depositeMoney)
+	_, err = db.Exec("UPDATE account SET balance = balance + ? WHERE account.id = 1", depositeMoney)
 	CheckError(err)
 
-	fmt.Printf("Transaction succesful. \n Current account balance: %f\n", balance)
+	updatedBalance := balance + depositeMoney
 
-	return balance, err
+	fmt.Printf("Transaction succesful. \n Current account balance: %f\n", updatedBalance)
 }
 
 const withdrawLimit float32 = 10.0
@@ -69,34 +69,31 @@ func Withdraw() {
 	defer db.Close()
 
 	var balance float32
-	var withdrawMoney float32
-
-	err = db.QueryRow("SELECT balance FROM account WHERE account.id=1").Scan(balance)
+	err = db.QueryRow("SELECT balance FROM account WHERE id=1").Scan(&balance)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	var withdrawMoney float32
+
 	fmt.Println("How much money would like to Withdraw? ")
 	if _, err := fmt.Scanln(&withdrawMoney); err != nil {
 		log.Fatal("Error while withdrawing the money")
-		return
 	}
-
 	if withdrawMoney > balance {
 		fmt.Println("Insufficient funds!")
 		return
 	}
-
 	if withdrawMoney < withdrawLimit {
 		fmt.Println("You can't withdraw less than CHF 10.-")
 		return
 	}
-
 	_, err = db.Exec("UPDATE account SET balance = balance - ? WHERE account.id = 1", withdrawMoney)
 	CheckError(err)
 
-	fmt.Printf("Transaction succesful. \n Current account balance: %f\n", balance)
+	updatedBalance := balance + withdrawMoney
 
+	fmt.Printf("Transaction succesful. \n Current account balance: %f\n", updatedBalance)
 }
 
 func CheckBalance() {

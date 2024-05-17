@@ -8,34 +8,12 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func LogIn() (bool, error) {
-	db := db.InitDB()
-
-	var userID int
-	var password string
-	var hash string
-
-	fmt.Println("User ID")
-	fmt.Scanln(&userID)
-	fmt.Println("Passowrd")
-	fmt.Scanln(&password)
-
-	err := db.QueryRow("SELECT id, password FROM customer WHERE id = ? AND password = ?", userID).Scan(&hash)
-
-	if err != nil {
-		return false, err
-	}
-
-	err = bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	if err != nil {
-		return false, nil
-	}
-
-	return true, nil
-}
-
 func Register() {
-	db := db.InitDB()
+	db, err := db.GetDB()
+	if err != nil {
+		fmt.Println("Error getting DB connection:", err)
+	}
+	defer db.Close()
 
 	var customer_name string
 	var customer_email string
@@ -58,7 +36,7 @@ func Register() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		_, err = db.Exec("INSERT INTO customer (name, email, password) VALUES (?,?)", customer_name, hash)
+		_, err = db.Exec("INSERT INTO account (name, email, password) VALUES (?,?)", customer_name, hash)
 		log.Fatal(err)
 
 	} else {

@@ -1,12 +1,13 @@
 package main
 
 import (
+	"bank/auth"
 	"bank/transaction"
 	"fmt"
 )
 
 func main() {
-	intro()
+	auth.Auth()
 }
 
 func intro() {
