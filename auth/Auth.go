@@ -7,16 +7,18 @@ import (
 func Auth() {
 	var choice string
 
-	fmt.Println("Welcome, Login (log)")
-	fmt.Scanln(&choice)
-
-	fmt.Println("New here? Create an account (reg)")
+	fmt.Println("Login or Register (log/reg)")
 	fmt.Scanln(&choice)
 
 	switch choice {
 	case "log":
+
+		fmt.Println("Welcome back")
 		LogIn()
+
 	case "reg":
+
+		fmt.Println("New here? Create an account")
 		Register()
 	}
 }

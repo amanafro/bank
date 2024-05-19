@@ -1,7 +1,8 @@
-package db
+package dbs
 
 import (
 	"database/sql"
+	"log"
 )
 
 func initializeDB() error {
@@ -33,4 +34,10 @@ func GetDB() (*sql.DB, error) {
 		return nil, err
 	}
 	return db, nil
+}
+
+func CheckError(err error) {
+	if err != nil {
+		log.Fatal("Error: ", err)
+	}
 }

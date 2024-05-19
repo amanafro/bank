@@ -4,7 +4,7 @@ i'm building this simple bank. a customer can have multiple accounts and only ha
 can access the accounts via a code.
 
 
-```
+```go
 func main() {
    bank()
 }

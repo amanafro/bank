@@ -1,15 +1,16 @@
 package auth
 
 import (
-	"bank/db"
 	"fmt"
 	"log"
+
+	"bank/dbs"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
 func Register() {
-	db, err := db.GetDB()
+	db, err := dbs.GetDB()
 	if err != nil {
 		fmt.Println("Error getting DB connection:", err)
 	}
@@ -19,7 +20,6 @@ func Register() {
 	var customer_email string
 	var customer_password string
 	var customer_password_conform string
-
 	fmt.Printf("Register \n")
 	fmt.Printf("Full name \n")
 	fmt.Scanln(&customer_name)
@@ -36,8 +36,10 @@ func Register() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		_, err = db.Exec("INSERT INTO account (name, email, password) VALUES (?,?)", customer_name, hash)
+		_, err = db.Exec("INSERT INTO account (name, email, password_hash, balance) VALUES (?,?,?,?)", customer_name, customer_email, hash, 0)
 		log.Fatal(err)
+
+		fmt.Println("You have been registered successfully")
 
 	} else {
 		fmt.Println("The passwords dont much")
