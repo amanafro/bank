@@ -36,7 +36,7 @@ func Register() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		_, err = db.Exec("INSERT INTO account (name, email, password_hash, balance) VALUES (?,?,?,?)", customer_name, customer_email, hash, 0)
+		_, err = db.Exec("INSERT INTO account (name, email, password, balance) VALUES (?,?,?,?)", customer_name, customer_email, hash, 0)
 		log.Fatal(err)
 
 		fmt.Println("You have been registered successfully")

@@ -49,7 +49,7 @@ func LogIn() (bool, error) {
 		return false, fmt.Errorf("Password cannot be empty")
 	}
 
-	err = db.QueryRow("SELECT id, password_hash FROM account WHERE id = ?", userID).Scan(&userID, &hashedPassword)
+	err = db.QueryRow("SELECT id, password FROM account WHERE id = ?", userID).Scan(&userID, &hashedPassword)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return false, fmt.Errorf("User not found")
