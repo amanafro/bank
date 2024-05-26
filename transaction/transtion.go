@@ -36,7 +36,7 @@ func Deposit() (float32, error) {
 	}
 
 	var balance float32
-	err = db.QueryRow("SELECT balance FROM accounts WHERE id=1").Scan(&balance)
+	err = db.QueryRow("SELECT balance FROM account WHERE id=1").Scan(&balance)
 	if err != nil {
 		return 0, fmt.Errorf("error fetching balance: %v", err)
 	}
@@ -46,7 +46,7 @@ func Deposit() (float32, error) {
 		return 0, err
 	}
 
-	_, err = db.Exec("UPDATE account SET balance = balance - ? WHERE account.id = 1", depositeMoney)
+	_, err = db.Exec("UPDATE account SET balance = balance - ? WHERE id = 1", depositeMoney)
 	dbs.CheckError(err)
 
 	fmt.Printf("Transaction succesful. \n Current account balance: %f\n", balance)
@@ -69,7 +69,7 @@ func Withdraw() {
 	var balance float32
 	var withdrawMoney float32
 
-	err = db.QueryRow("SELECT balance FROM account WHERE account.id=1").Scan(balance)
+	err = db.QueryRow("SELECT balance FROM account WHERE id=1").Scan(balance)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -90,7 +90,7 @@ func Withdraw() {
 		return
 	}
 
-	_, err = db.Exec("UPDATE account SET balance = balance - ? WHERE account.id = 1", withdrawMoney)
+	_, err = db.Exec("UPDATE account SET balance = balance - ? WHERE id = 1", withdrawMoney)
 	dbs.CheckError(err)
 
 	fmt.Printf("Transaction succesful. \n Current account balance: %f\n", balance)

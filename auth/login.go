@@ -12,13 +12,6 @@ import (
 	"golang.org/x/term"
 )
 
-type User struct {
-	ID         int
-	IsLoggedIn bool
-}
-
-var CurrentUser User
-
 func ReadPassword(fd int) ([]byte, error) {
 	return term.ReadPassword(fd)
 }
