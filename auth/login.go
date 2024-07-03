@@ -6,10 +6,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"os"
-
 	"golang.org/x/crypto/bcrypt"
 	"golang.org/x/term"
+	"os"
 )
 
 func ReadPassword(fd int) ([]byte, error) {
@@ -17,45 +16,53 @@ func ReadPassword(fd int) ([]byte, error) {
 }
 
 func LogIn() (bool, error) {
+outer:
 	db, err := dbs.GetDB()
-	dbs.CheckError(err)
-
+	if err != nil {
+		return false, &loginError{msg: fmt.Sprintf("Error connecting to database: %v", err)}
+	}
 	defer db.Close()
 
+	fmt.Print("User ID: ")
 	var userID int
-	var hashedPassword string
-
-	fmt.Println("User ID")
-	fmt.Scanln(&userID)
-	var password string
-
-	var passwordBytes []byte
-
-	fmt.Println("Password")
-	passwordBytes, err = ReadPassword(int(os.Stdin.Fd()))
-	if err != nil {
-		return false, fmt.Errorf("Error reading password: %v", err)
+	if _, err := fmt.Scanln(&userID); err != nil {
+		return false, &loginError{msg: "Error reading user ID"}
 	}
-	password = string(passwordBytes)
+
+	passwordBytes, err := ReadPassword(int(os.Stdin.Fd()))
+	if err != nil {
+		return false, &loginError{msg: fmt.Sprintf("Error reading password: %v", err)}
+	}
+	password := string(passwordBytes)
 
 	if len(password) == 0 {
-		return false, fmt.Errorf("Password cannot be empty")
+		fmt.Println("Password cannot be empty")
+		return false, nil
 	}
 
-	err = db.QueryRow("SELECT id, password FROM account WHERE id = ?", userID).Scan(&userID, &hashedPassword)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return false, fmt.Errorf("User not found")
+	row := db.QueryRow("SELECT id, password FROM account WHERE id = ?", userID)
+	if err := row.Scan(&userID, &hashedPassword); err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			fmt.Println("User not found")
+			break outer
+		default:
+			return false, &loginError{msg: fmt.Sprintf("Error querying database: %v", err)}
 		}
-		return false, fmt.Errorf("Error querying database: %v", err)
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	if err != nil {
-		return false, fmt.Errorf("Invalid password")
+		fmt.Println("Invalid password")
+		return false, nil
 	} else {
-		fmt.Println("You've succesfully logged in")
+		fmt.Println("You've successfully logged in")
 		start.Intro()
 	}
+
 	return true, nil
+}
+
+type loginError struct {
+	msg string
 }
